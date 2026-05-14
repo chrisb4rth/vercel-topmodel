@@ -1,0 +1,11 @@
+pyproject.toml
+agents/__init__.py
+context/__init__.py
+executor/__init__.py
+legal_advisor_system.egg-info/PKG-INFO
+legal_advisor_system.egg-info/SOURCES.txt
+legal_advisor_system.egg-info/dependency_links.txt
+legal_advisor_system.egg-info/requires.txt
+legal_advisor_system.egg-info/top_level.txt
+registry/__init__.py
+supervisor/__init__.py
