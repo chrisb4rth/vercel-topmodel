@@ -164,6 +164,15 @@ class ExecutorLayer:
             response_model=None,
         )
 
+        # Root endpoint — provides a basic service info response so that
+        # hitting "/" in a browser doesn't return a confusing 404.
+        app.add_api_route(
+            path="/",
+            endpoint=self._health_check,
+            methods=["GET"],
+            response_model=None,
+        )
+
         return app
 
     async def authenticate(
