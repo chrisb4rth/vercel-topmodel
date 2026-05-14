@@ -63,11 +63,11 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 3: Classification produces valid registered domains**
     - **Validates: Requirements 1.1, 1.3**
 
-- [~] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement Parallel Dispatcher
-  - [~] 5.1 Implement `ParallelDispatcher` (`supervisor/dispatcher.py`)
+- [x] 5. Implement Parallel Dispatcher
+  - [x] 5.1 Implement `ParallelDispatcher` (`supervisor/dispatcher.py`)
     - Dispatch queries to multiple sub-agents concurrently using `asyncio.gather` with per-agent timeouts
     - Return `SubAgentResult` for each agent (success, timeout, or error)
     - Enforce 30-second per-agent timeout
@@ -81,8 +81,8 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 5: Graceful degradation on partial timeout**
     - **Validates: Requirements 2.4, 2.5**
 
-- [ ] 6. Implement Response Synthesis
-  - [~] 6.1 Implement `ResponseSynthesizer` (`supervisor/synthesizer.py`)
+- [x] 6. Implement Response Synthesis
+  - [x] 6.1 Implement `ResponseSynthesizer` (`supervisor/synthesizer.py`)
     - Merge multiple `SubAgentResponse` objects into a single `SynthesizedResponse`
     - Preserve all legal references from all sub-agent responses without alteration
     - Remove duplicate information, organize content by sub-domain
@@ -94,8 +94,8 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 6: Reference preservation through synthesis**
     - **Validates: Requirements 2.2, 7.4**
 
-- [ ] 7. Implement Sub-Agents
-  - [~] 7.1 Implement Account Seizure Agent (`agents/account_seizure.py`)
+- [x] 7. Implement Sub-Agents
+  - [x] 7.1 Implement Account Seizure Agent (`agents/account_seizure.py`)
     - Extend `BaseSubAgent`, implement `handle_query` and `get_metadata`
     - Cover topics: seizure order processing, protected amounts (Pfändungsfreigrenzen), third-party debt orders, priority of claims
     - Cite ZPO and PfÜB provisions in responses
@@ -104,7 +104,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - Include `limitation_note` when no provision matches
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [~] 7.2 Implement Insolvency Agent (`agents/insolvency.py`)
+  - [x] 7.2 Implement Insolvency Agent (`agents/insolvency.py`)
     - Extend `BaseSubAgent`, implement `handle_query` and `get_metadata`
     - Cover topics: account blocking (§ 89 InsO), administrator rights (§ 80 InsO), payment prohibitions (§ 82 InsO), estate segregation (§ 35 InsO)
     - Cite InsO provisions in responses
