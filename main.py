@@ -95,9 +95,7 @@ def build_application() -> FastAPI:
     # Step 2: Instantiate concrete sub-agents.
     account_seizure_agent: AccountSeizureAgent = AccountSeizureAgent()
     insolvency_agent: InsolvencyAgent = InsolvencyAgent()
-    source_of_wealth_agent: SourceOfWealthAgent = SourceOfWealthAgent(
-        search_tool=_default_search_tool,
-    )
+    source_of_wealth_agent: SourceOfWealthAgent = SourceOfWealthAgent()
 
     # Step 3: Register sub-agents — populates the registry's metadata catalog.
     # The registry enforces unique domain_ids, preventing accidental overwrites.
