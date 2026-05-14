@@ -4,7 +4,7 @@ Source of Wealth Sub-Agent module.
 Implements the specialized sub-agent for answering questions about the source
 of wealth (Mittelherkunft) of banking customers. This agent supports KYC/AML
 compliance by retrieving background information on subjects from the web via
-a search API tool, then synthesizing findings into a structured response with
+the Parallel API, then synthesizing findings into a structured response with
 references to applicable regulations (GwG — Geldwäschegesetz).
 
 The agent can be used to:
@@ -12,10 +12,16 @@ The agent can be used to:
 - Identify publicly available information about wealth origins
 - Flag potential inconsistencies or risk indicators
 - Cite GwG provisions governing source-of-wealth verification obligations
+
+Configuration:
+    Set the environment variable PARALLEL_API_KEY to authenticate with the
+    Parallel API. The agent will raise a configuration error if the key is
+    not set when a query is processed.
 """
 
 import logging
-from typing import Callable, Awaitable, Optional
+import os
+from typing import Optional
 
 from agents.base import BaseSubAgent
 from models import (
@@ -29,12 +35,6 @@ from models import (
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-# Type alias for the search tool function signature.
-# The search tool accepts a query string and returns a list of result dicts,
-# each containing at minimum "title", "snippet", and "url" keys.
-SearchTool = Callable[[str], Awaitable[list[dict]]]
-
-
 # Legal references applicable to source-of-wealth verification in German banking.
 _SOW_REFERENCES: list[LegalReference] = [
     LegalReference(law_name="GwG", paragraph="§ 10", section="Abs. 1 Nr. 2"),
@@ -42,37 +42,48 @@ _SOW_REFERENCES: list[LegalReference] = [
     LegalReference(law_name="GwG", paragraph="§ 15", section="Abs. 2"),
 ]
 
+# The SOW research prompt sent to the Parallel API as the task input prefix.
+_SOW_RESEARCH_PROMPT: str = (
+    "# Source of Wealth (SOW) Research Prompt for Banking Compliance\n\n"
+    "## System Prompt\n\n"
+    "You are an AI research assistant specialized in conducting source of wealth "
+    "verification for banking compliance and know-your-customer (KYC) processes. "
+    "Your role is to gather, analyze, and document publicly available information "
+    "about individuals to support banks' due diligence obligations under "
+    "anti-money laundering (AML) and counter-terrorism financing (CTF) regulations.\n\n"
+    "### Key Principles\n\n"
+    "1. **Compliance First**: All research must align with banking regulations "
+    "(e.g., FATF guidelines, FinCEN, EU 5AMLD, local jurisdictional requirements)\n"
+    "2. **Evidence-Based**: Only report information found in publicly available, "
+    "credible sources\n"
+    "3. **Structured Output**: Deliver findings in a standardized format\n"
+    "4. **Risk Assessment**: Contextualize findings within AML/CFT risk frameworks\n"
+    "5. **Source Documentation**: Every claim must be traceable to its source\n"
+    "6. **Impartiality**: Report findings objectively without bias or speculation\n\n"
+    "---\n\n"
+    "## Research Directive\n\n"
+    "Conduct targeted web research across these categories:\n"
+    "1. Professional & Business Background\n"
+    "2. Public Business Activities & Wealth Sources\n"
+    "3. Financial Indicators\n"
+    "4. Negative Indicators & Risk Signals (sanctions, PEP, adverse media)\n"
+    "5. Verification & Corroboration\n\n"
+    "---\n\n"
+    "## Subject Information\n\n"
+)
+
 
 class SourceOfWealthAgent(BaseSubAgent):
     """
     Sub-agent specialized in source-of-wealth research for KYC/AML compliance.
 
-    Uses a search API tool to retrieve publicly available background information
-    on subjects (customers, beneficial owners) and synthesizes findings into a
-    structured response. Cites GwG (Geldwäschegesetz) provisions governing the
-    bank's obligation to verify the origin of funds.
+    Uses the Parallel API to conduct web-based research on subjects (customers,
+    beneficial owners) and synthesizes findings into a structured response.
+    Cites GwG (Geldwäschegesetz) provisions governing the bank's obligation
+    to verify the origin of funds.
 
-    The agent requires a search tool to be injected at construction time. This
-    tool is called during query processing to retrieve web-based background
-    information on the subject in question.
-
-    Args:
-        search_tool: An async callable that accepts a search query string and
-            returns a list of result dictionaries with "title", "snippet", and
-            "url" keys. This is the agent's primary mechanism for retrieving
-            external information.
+    The agent reads the API key from the PARALLEL_API_KEY environment variable.
     """
-
-    def __init__(self, search_tool: SearchTool) -> None:
-        """
-        Initialize the Source of Wealth agent with a search tool.
-
-        Args:
-            search_tool: Async callable that performs web searches. Must accept
-                a query string and return a list of dicts with keys "title",
-                "snippet", and "url".
-        """
-        self._search_tool: SearchTool = search_tool
 
     def get_metadata(self) -> SubAgentMetadata:
         """
@@ -104,11 +115,11 @@ class SourceOfWealthAgent(BaseSubAgent):
         context: ConversationContext,
     ) -> SubAgentResponse:
         """
-        Process a source-of-wealth query by searching for background information.
+        Process a source-of-wealth query by calling the Parallel search API.
 
-        Calls the injected search tool to retrieve publicly available information
-        about the subject, then synthesizes the results into a structured response
-        with applicable GwG references.
+        Sends the query to the Parallel API which conducts web research on the
+        subject, then formats the results into a structured response with
+        applicable GwG references.
 
         Args:
             query: The user's natural-language question about a subject's source
@@ -136,15 +147,34 @@ class SourceOfWealthAgent(BaseSubAgent):
                 limitation_note=None,
             )
 
-        # Build a search query from the user's question.
-        search_query: str = _build_search_query(query)
-
-        # Call the search tool to retrieve background information.
-        try:
-            search_results: list[dict] = await self._search_tool(search_query)
-        except Exception as e:
-            logger.error("Search tool failed: %s", str(e))
+        # Retrieve the API key from environment.
+        api_key: Optional[str] = os.environ.get("PARALLEL_API_KEY")
+        if not api_key:
+            logger.error(
+                "PARALLEL_API_KEY environment variable is not set. "
+                "Cannot perform source-of-wealth research."
+            )
             limitation_note: str = (
+                "Die Recherche konnte nicht durchgeführt werden: "
+                "API-Schlüssel nicht konfiguriert."
+                if is_german
+                else "Research could not be performed: API key not configured."
+            )
+            return SubAgentResponse(
+                domain_id="source_of_wealth",
+                answer_body=limitation_note,
+                references=list(_SOW_REFERENCES),
+                confidence=ConfidenceLevel.LOW,
+                is_out_of_scope=False,
+                limitation_note=limitation_note,
+            )
+
+        # Call the Parallel API to conduct research.
+        try:
+            research_output: str = await _call_parallel_api(api_key, query)
+        except Exception as e:
+            logger.error("Parallel API call failed: %s", str(e))
+            limitation_note = (
                 "Die Suche nach Hintergrundinformationen konnte nicht "
                 "durchgeführt werden. Bitte versuchen Sie es erneut."
                 if is_german
@@ -160,8 +190,8 @@ class SourceOfWealthAgent(BaseSubAgent):
                 limitation_note=limitation_note,
             )
 
-        # If no results were found, return a low-confidence response.
-        if not search_results:
+        # If the API returned empty or no useful content.
+        if not research_output or len(research_output.strip()) < 50:
             limitation_note = (
                 "Zu der angefragten Person/Entität konnten keine öffentlich "
                 "verfügbaren Informationen zur Mittelherkunft gefunden werden. "
@@ -180,9 +210,9 @@ class SourceOfWealthAgent(BaseSubAgent):
                 limitation_note=limitation_note,
             )
 
-        # Synthesize search results into a structured answer.
-        answer_body: str = _synthesize_results(search_results, is_german)
-        confidence: ConfidenceLevel = _assess_confidence(search_results)
+        # Build the final answer with regulatory context.
+        answer_body: str = _format_answer(research_output, is_german)
+        confidence: ConfidenceLevel = _assess_confidence(research_output)
 
         return SubAgentResponse(
             domain_id="source_of_wealth",
@@ -192,6 +222,138 @@ class SourceOfWealthAgent(BaseSubAgent):
             is_out_of_scope=False,
             limitation_note=None,
         )
+
+
+async def _call_parallel_api(api_key: str, query: str) -> str:
+    """
+    Call the Parallel API to conduct source-of-wealth research.
+
+    Creates a task run with the SOW research prompt and the user's query,
+    then waits for the result.
+
+    Args:
+        api_key: The Parallel API key.
+        query: The user's research query about a subject.
+
+    Returns:
+        The research output text from the Parallel API.
+
+    Raises:
+        Exception: If the API call fails or times out.
+    """
+    import asyncio
+    from parallel import Parallel
+
+    # Run the synchronous Parallel client in a thread to avoid blocking
+    # the async event loop.
+    def _run_task() -> str:
+        client = Parallel(api_key=api_key)
+
+        task_input: str = _SOW_RESEARCH_PROMPT + query
+
+        task_run = client.task_run.create(
+            input=task_input,
+            processor="core-fast",
+            task_spec={
+                "input_schema": {
+                    "type": "text",
+                    "description": "The user request to execute.",
+                },
+                "output_schema": {
+                    "type": "text",
+                    "description": (
+                        "Return a helpful final answer in clear markdown "
+                        "that addresses the user request."
+                    ),
+                },
+            },
+        )
+
+        run_result = client.task_run.result(task_run.run_id, api_timeout=3600)
+        return run_result.output
+
+    loop = asyncio.get_event_loop()
+    result: str = await loop.run_in_executor(None, _run_task)
+    return result
+
+
+def _format_answer(research_output: str, is_german: bool) -> str:
+    """
+    Format the Parallel API research output with regulatory context.
+
+    Args:
+        research_output: Raw research text from the Parallel API.
+        is_german: Whether to produce a German-language wrapper.
+
+    Returns:
+        Formatted answer body string.
+    """
+    if is_german:
+        header = (
+            "**Mittelherkunftsprüfung gemäß § 10 Abs. 1 Nr. 2 GwG**\n\n"
+            "Die Bank ist verpflichtet, die Herkunft der Mittel zu klären. "
+            "Die folgende Recherche ergab:\n\n"
+        )
+        footer = (
+            "\n\n---\n\n"
+            "**Hinweis:** Diese Informationen stammen aus öffentlich "
+            "zugänglichen Quellen und ersetzen keine vollständige "
+            "Sorgfaltsprüfung gemäß § 11 Abs. 1 GwG. Bei erhöhtem Risiko "
+            "sind verstärkte Sorgfaltspflichten nach § 15 Abs. 2 GwG "
+            "anzuwenden."
+        )
+    else:
+        header = (
+            "**Source of Wealth Verification pursuant to § 10(1) No. 2 GwG**\n\n"
+            "The bank is obligated to clarify the origin of funds. "
+            "The following research was found:\n\n"
+        )
+        footer = (
+            "\n\n---\n\n"
+            "**Note:** This information is derived from publicly available "
+            "sources and does not replace a full due diligence review pursuant "
+            "to § 11(1) GwG. In cases of elevated risk, enhanced due diligence "
+            "measures under § 15(2) GwG must be applied."
+        )
+
+    return header + research_output + footer
+
+
+def _assess_confidence(research_output: str) -> ConfidenceLevel:
+    """
+    Assess confidence level based on the quality of research output.
+
+    Uses simple heuristics on the output length and content indicators
+    to determine confidence.
+
+    Args:
+        research_output: The research text from the Parallel API.
+
+    Returns:
+        HIGH if output is substantial with multiple sources, MEDIUM if
+        moderate, LOW if minimal.
+    """
+    output_length: int = len(research_output)
+
+    # Check for indicators of substantive research.
+    has_sources: bool = (
+        "source" in research_output.lower()
+        or "quelle" in research_output.lower()
+        or "http" in research_output.lower()
+    )
+    has_findings: bool = (
+        "found" in research_output.lower()
+        or "identified" in research_output.lower()
+        or "gefunden" in research_output.lower()
+        or "festgestellt" in research_output.lower()
+    )
+
+    if output_length > 2000 and has_sources and has_findings:
+        return ConfidenceLevel.HIGH
+    elif output_length > 500 and (has_sources or has_findings):
+        return ConfidenceLevel.MEDIUM
+    else:
+        return ConfidenceLevel.LOW
 
 
 def _detect_german(query_lower: str) -> bool:
@@ -277,96 +439,3 @@ def _is_within_domain(query_lower: str) -> bool:
         "research",
     ]
     return any(indicator in query_lower for indicator in domain_indicators)
-
-
-def _build_search_query(query: str) -> str:
-    """
-    Build an optimized search query from the user's question.
-
-    Extracts the core subject and appends relevant context terms to improve
-    search result quality for source-of-wealth research.
-
-    Args:
-        query: The original user query.
-
-    Returns:
-        An optimized search string for the search tool.
-    """
-    # Use the query as-is but append context for better results.
-    # In a production system this would use NLP to extract the subject name.
-    return f"{query} background business activities wealth"
-
-
-def _synthesize_results(search_results: list[dict], is_german: bool) -> str:
-    """
-    Synthesize search results into a structured answer body.
-
-    Combines titles and snippets from search results into a coherent
-    summary, prefixed with the regulatory context.
-
-    Args:
-        search_results: List of result dicts with "title", "snippet", "url".
-        is_german: Whether to produce a German-language response.
-
-    Returns:
-        Formatted answer body string.
-    """
-    if is_german:
-        header = (
-            "Gemäß § 10 Abs. 1 Nr. 2 GwG ist die Bank verpflichtet, die "
-            "Herkunft der Mittel zu klären. Die folgende Recherche ergab:\n\n"
-        )
-    else:
-        header = (
-            "Pursuant to § 10(1) No. 2 GwG, the bank is obligated to clarify "
-            "the origin of funds. The following research was found:\n\n"
-        )
-
-    findings: list[str] = []
-    for i, result in enumerate(search_results[:5], start=1):
-        title: str = result.get("title", "Untitled")
-        snippet: str = result.get("snippet", "")
-        url: str = result.get("url", "")
-        findings.append(f"{i}. **{title}**\n   {snippet}\n   Source: {url}")
-
-    body: str = header + "\n\n".join(findings)
-
-    if is_german:
-        body += (
-            "\n\n**Hinweis:** Diese Informationen stammen aus öffentlich "
-            "zugänglichen Quellen und ersetzen keine vollständige "
-            "Sorgfaltsprüfung gemäß § 11 Abs. 1 GwG."
-        )
-    else:
-        body += (
-            "\n\n**Note:** This information is derived from publicly available "
-            "sources and does not replace a full due diligence review pursuant "
-            "to § 11(1) GwG."
-        )
-
-    return body
-
-
-def _assess_confidence(search_results: list[dict]) -> ConfidenceLevel:
-    """
-    Assess confidence level based on the quality and quantity of search results.
-
-    Args:
-        search_results: List of result dicts from the search tool.
-
-    Returns:
-        HIGH if 3+ results with substantive snippets, MEDIUM if 1-2 results,
-        LOW if results lack substance.
-    """
-    substantive_results: int = sum(
-        1
-        for r in search_results
-        if len(r.get("snippet", "")) > 50
-    )
-
-    if substantive_results >= 3:
-        return ConfidenceLevel.HIGH
-    elif substantive_results >= 1:
-        return ConfidenceLevel.MEDIUM
-    else:
-        return ConfidenceLevel.LOW

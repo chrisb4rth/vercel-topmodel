@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
     "httpx>=0.25.0",
+    "parallel>=0.1.0",
 ]
 
 [project.optional-dependencies]
