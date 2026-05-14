@@ -6,6 +6,7 @@ authentication, request validation, rate limiting, and streaming responses.
 Compatible with Vercel AI Gateway routing conventions.
 """
 
+from executor.executor import ExecutorLayer, create_app
 from executor.validation import (
     ValidationError,
     validate_language,

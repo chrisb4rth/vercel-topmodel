@@ -133,11 +133,11 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 11: Out-of-scope queries are flagged**
     - **Validates: Requirements 3.5, 4.5**
 
-- [~] 8. Checkpoint - Ensure all tests pass
+- [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Implement Conversation Context Management
-  - [~] 9.1 Implement `ContextStore` (`context/store.py`)
+- [x] 9. Implement Conversation Context Management
+  - [x] 9.1 Implement `ContextStore` (`context/store.py`)
     - Implement `get_context()`, `append_exchange()`, `summarize_if_needed()` methods
     - Store per-session conversation history (minimum 20 exchanges before truncation)
     - Implement summarization that preserves key entities (legal references, case identifiers, monetary amounts, party names)
@@ -152,16 +152,16 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 13: Summarization preserves key entities**
     - **Validates: Requirements 5.4, 5.5**
 
-- [ ] 10. Implement Supervisor Orchestration
-  - [~] 10.1 Implement `Supervisor` class (`supervisor/supervisor.py`)
+- [x] 10. Implement Supervisor Orchestration
+  - [x] 10.1 Implement `Supervisor` class (`supervisor/supervisor.py`)
     - Wire together: registry, classifier, dispatcher, synthesizer, context store
     - Implement `process_query()` orchestrating the full pipeline: validate → classify → dispatch → synthesize → stream
     - Inject conversation context when delegating to sub-agents
     - Handle edge cases: empty registry (reject with 503), all timeouts (return 504-style error), partial timeouts (graceful degradation)
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.4, 2.5, 8.3_
 
-- [ ] 11. Implement Executor Layer and Streaming
-  - [~] 11.1 Implement `ExecutorLayer` (`executor/executor.py`)
+- [x] 11. Implement Executor Layer and Streaming
+  - [x] 11.1 Implement `ExecutorLayer` (`executor/executor.py`)
     - Expose REST API compatible with Vercel AI Gateway routing conventions
     - Implement `handle_request()`, `authenticate()`, `validate_request()` methods
     - Return streaming SSE responses, deliver first token within 3 seconds
@@ -181,8 +181,8 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - Verify first-token latency contract
     - _Requirements: 6.5_
 
-- [ ] 12. Integration and Wiring
-  - [~] 12.1 Wire all components together at application entry point
+- [x] 12. Integration and Wiring
+  - [x] 12.1 Wire all components together at application entry point
     - Create application startup: instantiate registry, register sub-agents, create context store, supervisor, executor
     - Ensure registry discovery happens at startup
     - Configure Vercel AI Gateway compatibility
@@ -194,7 +194,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - Test conversation context carried across exchanges
     - _Requirements: 1.1, 1.2, 2.1, 2.2, 2.6, 5.1, 5.2_
 
-- [~] 13. Final checkpoint - Ensure all tests pass
+- [x] 13. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
