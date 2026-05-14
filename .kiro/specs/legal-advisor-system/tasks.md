@@ -34,8 +34,8 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 15: Registry discovery completeness**
     - **Validates: Requirements 8.1, 8.2**
 
-- [ ] 3. Implement Query Validation and Classification
-  - [~] 3.1 Implement query validation logic (`executor/validation.py`)
+- [x] 3. Implement Query Validation and Classification
+  - [x] 3.1 Implement query validation logic (`executor/validation.py`)
     - Validate query length (1–2000 characters), reject empty or oversized queries with descriptive error
     - Validate language detection (German/English only), reject unsupported languages
     - Validate request payload structure (required fields: query, session_id)
@@ -53,7 +53,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 14: Malformed request rejection**
     - **Validates: Requirements 6.6**
 
-  - [~] 3.5 Implement query classifier (`supervisor/classifier.py`)
+  - [x] 3.5 Implement query classifier (`supervisor/classifier.py`)
     - Classify queries into one or more legal sub-domains based on registry metadata
     - Return `ClassificationResult` with domain_ids, confidence, and detected language
     - If no domain matches, return empty domain_ids so supervisor can list available sub-domains
