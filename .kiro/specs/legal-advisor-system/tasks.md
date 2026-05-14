@@ -6,25 +6,25 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
 
 ## Tasks
 
-- [ ] 1. Set up project structure, data models, and base interfaces
+- [x] 1. Set up project structure, data models, and base interfaces
   - [x] 1.1 Create directory structure and module scaffolding
     - Create directories: `executor/`, `supervisor/`, `agents/`, `registry/`, `context/`, `tests/property/`, `tests/unit/`, `tests/integration/`
     - Add `__init__.py` files for all packages
     - Set up `pyproject.toml` or `requirements.txt` with dependencies (hypothesis, pytest, pytest-asyncio, pydantic or dataclasses)
     - _Requirements: 8.4, 8.5_
 
-  - [ ] 1.2 Implement data models (`models.py`)
+  - [x] 1.2 Implement data models (`models.py`)
     - Implement all dataclasses: `Language`, `ConfidenceLevel`, `ChatRequest`, `LegalReference`, `SubAgentMetadata`, `ClassificationResult`, `SubAgentResponse`, `SubAgentResult`, `SynthesizedResponse`, `Exchange`, `ConversationContext`, `StreamChunk`
     - Ensure full typing and docstrings for all fields
     - _Requirements: 7.1, 7.2, 7.5_
 
-  - [-] 1.3 Implement the base sub-agent interface (`agents/base.py`)
+  - [x] 1.3 Implement the base sub-agent interface (`agents/base.py`)
     - Create `BaseSubAgent` abstract class with `handle_query` and `get_metadata` abstract methods
     - Define type signatures matching the design document
     - _Requirements: 8.4, 8.5_
 
-- [ ] 2. Implement Sub-Agent Registry
-  - [~] 2.1 Implement `SubAgentRegistry` class (`registry/registry.py`)
+- [x] 2. Implement Sub-Agent Registry
+  - [x] 2.1 Implement `SubAgentRegistry` class (`registry/registry.py`)
     - Implement `register()`, `get_agents_for_domains()`, `get_all_metadata()` methods
     - Store agents in a dict keyed by `domain_id`
     - Raise appropriate errors for duplicate registrations
