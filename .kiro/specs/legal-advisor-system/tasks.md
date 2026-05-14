@@ -7,24 +7,24 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
 ## Tasks
 
 - [ ] 1. Set up project structure, data models, and base interfaces
-  - [ ] 1.1 Create directory structure and module scaffolding
+  - [-] 1.1 Create directory structure and module scaffolding
     - Create directories: `executor/`, `supervisor/`, `agents/`, `registry/`, `context/`, `tests/property/`, `tests/unit/`, `tests/integration/`
     - Add `__init__.py` files for all packages
     - Set up `pyproject.toml` or `requirements.txt` with dependencies (hypothesis, pytest, pytest-asyncio, pydantic or dataclasses)
     - _Requirements: 8.4, 8.5_
 
-  - [ ] 1.2 Implement data models (`models.py`)
+  - [~] 1.2 Implement data models (`models.py`)
     - Implement all dataclasses: `Language`, `ConfidenceLevel`, `ChatRequest`, `LegalReference`, `SubAgentMetadata`, `ClassificationResult`, `SubAgentResponse`, `SubAgentResult`, `SynthesizedResponse`, `Exchange`, `ConversationContext`, `StreamChunk`
     - Ensure full typing and docstrings for all fields
     - _Requirements: 7.1, 7.2, 7.5_
 
-  - [ ] 1.3 Implement the base sub-agent interface (`agents/base.py`)
+  - [~] 1.3 Implement the base sub-agent interface (`agents/base.py`)
     - Create `BaseSubAgent` abstract class with `handle_query` and `get_metadata` abstract methods
     - Define type signatures matching the design document
     - _Requirements: 8.4, 8.5_
 
 - [ ] 2. Implement Sub-Agent Registry
-  - [ ] 2.1 Implement `SubAgentRegistry` class (`registry/registry.py`)
+  - [~] 2.1 Implement `SubAgentRegistry` class (`registry/registry.py`)
     - Implement `register()`, `get_agents_for_domains()`, `get_all_metadata()` methods
     - Store agents in a dict keyed by `domain_id`
     - Raise appropriate errors for duplicate registrations
@@ -35,7 +35,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Validates: Requirements 8.1, 8.2**
 
 - [ ] 3. Implement Query Validation and Classification
-  - [ ] 3.1 Implement query validation logic (`executor/validation.py`)
+  - [~] 3.1 Implement query validation logic (`executor/validation.py`)
     - Validate query length (1–2000 characters), reject empty or oversized queries with descriptive error
     - Validate language detection (German/English only), reject unsupported languages
     - Validate request payload structure (required fields: query, session_id)
@@ -53,7 +53,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 14: Malformed request rejection**
     - **Validates: Requirements 6.6**
 
-  - [ ] 3.5 Implement query classifier (`supervisor/classifier.py`)
+  - [~] 3.5 Implement query classifier (`supervisor/classifier.py`)
     - Classify queries into one or more legal sub-domains based on registry metadata
     - Return `ClassificationResult` with domain_ids, confidence, and detected language
     - If no domain matches, return empty domain_ids so supervisor can list available sub-domains
@@ -63,11 +63,11 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 3: Classification produces valid registered domains**
     - **Validates: Requirements 1.1, 1.3**
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [~] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Implement Parallel Dispatcher
-  - [ ] 5.1 Implement `ParallelDispatcher` (`supervisor/dispatcher.py`)
+  - [~] 5.1 Implement `ParallelDispatcher` (`supervisor/dispatcher.py`)
     - Dispatch queries to multiple sub-agents concurrently using `asyncio.gather` with per-agent timeouts
     - Return `SubAgentResult` for each agent (success, timeout, or error)
     - Enforce 30-second per-agent timeout
@@ -82,7 +82,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Validates: Requirements 2.4, 2.5**
 
 - [ ] 6. Implement Response Synthesis
-  - [ ] 6.1 Implement `ResponseSynthesizer` (`supervisor/synthesizer.py`)
+  - [~] 6.1 Implement `ResponseSynthesizer` (`supervisor/synthesizer.py`)
     - Merge multiple `SubAgentResponse` objects into a single `SynthesizedResponse`
     - Preserve all legal references from all sub-agent responses without alteration
     - Remove duplicate information, organize content by sub-domain
@@ -95,7 +95,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Validates: Requirements 2.2, 7.4**
 
 - [ ] 7. Implement Sub-Agents
-  - [ ] 7.1 Implement Account Seizure Agent (`agents/account_seizure.py`)
+  - [~] 7.1 Implement Account Seizure Agent (`agents/account_seizure.py`)
     - Extend `BaseSubAgent`, implement `handle_query` and `get_metadata`
     - Cover topics: seizure order processing, protected amounts (Pfändungsfreigrenzen), third-party debt orders, priority of claims
     - Cite ZPO and PfÜB provisions in responses
@@ -104,7 +104,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - Include `limitation_note` when no provision matches
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 7.2 Implement Insolvency Agent (`agents/insolvency.py`)
+  - [~] 7.2 Implement Insolvency Agent (`agents/insolvency.py`)
     - Extend `BaseSubAgent`, implement `handle_query` and `get_metadata`
     - Cover topics: account blocking (§ 89 InsO), administrator rights (§ 80 InsO), payment prohibitions (§ 82 InsO), estate segregation (§ 35 InsO)
     - Cite InsO provisions in responses
@@ -133,11 +133,11 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Property 11: Out-of-scope queries are flagged**
     - **Validates: Requirements 3.5, 4.5**
 
-- [ ] 8. Checkpoint - Ensure all tests pass
+- [~] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Implement Conversation Context Management
-  - [ ] 9.1 Implement `ContextStore` (`context/store.py`)
+  - [~] 9.1 Implement `ContextStore` (`context/store.py`)
     - Implement `get_context()`, `append_exchange()`, `summarize_if_needed()` methods
     - Store per-session conversation history (minimum 20 exchanges before truncation)
     - Implement summarization that preserves key entities (legal references, case identifiers, monetary amounts, party names)
@@ -153,7 +153,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - **Validates: Requirements 5.4, 5.5**
 
 - [ ] 10. Implement Supervisor Orchestration
-  - [ ] 10.1 Implement `Supervisor` class (`supervisor/supervisor.py`)
+  - [~] 10.1 Implement `Supervisor` class (`supervisor/supervisor.py`)
     - Wire together: registry, classifier, dispatcher, synthesizer, context store
     - Implement `process_query()` orchestrating the full pipeline: validate → classify → dispatch → synthesize → stream
     - Inject conversation context when delegating to sub-agents
@@ -161,7 +161,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.4, 2.5, 8.3_
 
 - [ ] 11. Implement Executor Layer and Streaming
-  - [ ] 11.1 Implement `ExecutorLayer` (`executor/executor.py`)
+  - [~] 11.1 Implement `ExecutorLayer` (`executor/executor.py`)
     - Expose REST API compatible with Vercel AI Gateway routing conventions
     - Implement `handle_request()`, `authenticate()`, `validate_request()` methods
     - Return streaming SSE responses, deliver first token within 3 seconds
@@ -182,7 +182,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - _Requirements: 6.5_
 
 - [ ] 12. Integration and Wiring
-  - [ ] 12.1 Wire all components together at application entry point
+  - [~] 12.1 Wire all components together at application entry point
     - Create application startup: instantiate registry, register sub-agents, create context store, supervisor, executor
     - Ensure registry discovery happens at startup
     - Configure Vercel AI Gateway compatibility
@@ -194,7 +194,7 @@ Implement a Python-based agentic chatbot for legal questions in German banking o
     - Test conversation context carried across exchanges
     - _Requirements: 1.1, 1.2, 2.1, 2.2, 2.6, 5.1, 5.2_
 
-- [ ] 13. Final checkpoint - Ensure all tests pass
+- [~] 13. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
